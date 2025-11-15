@@ -2,21 +2,40 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+const mockAppService = {
+  getMlStatus: jest.fn(async () => ({
+    bff_status: 'ok',
+    ml_response: { status: 'ok', service: 'backend-ml' },
+  })),
+};
+
 describe('AppController', () => {
   let appController: AppController;
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useValue: mockAppService,
+        },
+      ],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appController = module.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('getMlStatus', () => {
+    it('should return a status object from the service', async () => {
+      const result = await appController.getMlStatus();
+
+      expect(result.bff_status).toBe('ok');
+      expect(mockAppService.getMlStatus).toHaveBeenCalledTimes(1);
     });
   });
 });
