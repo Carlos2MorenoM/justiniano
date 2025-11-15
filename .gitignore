@@ -1,0 +1,73 @@
+# System & OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Node.js (BFF & Frontend)
+node_modules/
+dist/
+build/
+.npm/
+
+# Python (Backend-ML)
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Temp
+.temp/
+.tmp/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment Files (Secrets)
+.env
+.env.*
+!.env.example
+
+# Editor & IDE Caches
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.swp
+*.swo
+
+# VSCode (Mejorado)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# DVC (MLOps)
+.dvc/cache
+
+# Docker
+docker-logs/
