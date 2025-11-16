@@ -1,0 +1,5 @@
+outs:
+- md5: b9c8fe4f136aba25c8ff14038519d199
+  size: 166015342
+  hash: md5
+  path: knowledge_chunks.jsonl
