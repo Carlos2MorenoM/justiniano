@@ -81,3 +81,6 @@ docker-logs/
 # Trained or downloaded models
 /backend-ml/models/
 !/backend-ml/models/.gitkeep
+
+# Qdrant local storage
+/qdrant_storage/
