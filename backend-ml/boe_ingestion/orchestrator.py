@@ -1,4 +1,3 @@
-# backend-ml/boe_ingestion/orchestrator.py
 """
 Orchestrates the end-to-end BOE ingestion pipeline.
 
@@ -10,6 +9,8 @@ This module is responsible for:
 5. Calling the api_client to fetch XML for new documents.
 6. Calling the parsing_service to extract clean text.
 7. Calling io_helpers to save the new data and update the ID cache.
+This version is hardened with a global try/finally block
+to ensure completion is always logged.
 """
 import httpx
 import logging
@@ -69,82 +70,92 @@ async def ingest_boe_data(start_date_str: str, end_date_str: str):
         start_date_str: Start date in "YYYYMMDD" format.
         end_date_str: End date in "YYYYMMDD" format.
     """
-    log.info(f"Starting background ingestion from {start_date_str} to {end_date_str}...")
+    log.info(f"--- INGESTION TASK STARTED: {start_date_str} to {end_date_str} ---")
     
-    # 1. Load the cache of IDs we already have
-    log.info(f"Loading already processed IDs from {PROCESSED_IDS_FILE.name}...")
-    existing_ids = load_processed_ids()
-    log.info(f"Found {len(existing_ids)} previously processed IDs in cache.")
+    total_new_docs_processed = 0
+    existing_ids = set() # Initialize empty set
 
     try:
-        start_date = datetime.strptime(start_date_str, "%Y%m%d")
-        end_date = datetime.strptime(end_date_str, "%Y%m%d")
-    except ValueError as e:
-        log.error(f"Invalid date format: {e}. Task aborted.")
-        return
+        # --- 1. Load Cache ---
+        log.info(f"Loading already processed IDs from {PROCESSED_IDS_FILE.name}...")
+        existing_ids = load_processed_ids()
+        log.info(f"Found {len(existing_ids)} previously processed IDs in cache.")
 
-    current_date = start_date
-    total_new_docs_processed = 0
+        # --- 2. Parse Dates ---
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y%m%d")
+            end_date = datetime.strptime(end_date_str, "%Y%m%d")
+        except ValueError as e:
+            log.error(f"Invalid date format: {e}. Task aborted.")
+            return # This is a user error, safe to exit
 
-    # 2. Start the main ingestion loop
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        while current_date <= end_date:
-            date_str = current_date.strftime("%Y%m%d")
-            log.info(f"Processing date: {date_str}")
-            
-            # 3. Fetch document IDs for the day
-            doc_ids = await api_client.fetch_summary_ids(client, date_str)
-            if not doc_ids:
-                log.warning(f"No documents found for {date_str}. Skipping.")
+        current_date = start_date
+
+        # --- 3. Start Main Loop ---
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            while current_date <= end_date:
+                date_str = current_date.strftime("%Y%m%d")
+                log.info(f"Processing date: {date_str}")
+                
+                # api_client is hardened, won't raise 404/500
+                doc_ids = await api_client.fetch_summary_ids(client, date_str)
+                
+                if not doc_ids:
+                    log.warning(f"No new documents found for {date_str}. Skipping.")
+                    current_date += timedelta(days=1)
+                    continue
+
+                log.info(f"Found {len(doc_ids)} document IDs for {date_str}. Checking against cache...")
+                
+                new_docs_this_day = 0
+                for doc_id in doc_ids:
+                    
+                    # 4. === THE IDEMPOTENCY CHECK ===
+                    if doc_id in existing_ids:
+                        # Use log.debug for "spammy" messages
+                        log.debug(f"ID {doc_id} already processed. Skipping.")
+                        continue
+                    
+                    # 5. Process the new document
+                    new_docs_this_day += 1
+                    
+                    # api_client is hardened, won't raise 404/500
+                    xml_content = await api_client.fetch_document_xml(client, doc_id)
+                    if not xml_content:
+                        continue 
+
+                    clean_text = parsing_service.parse_legal_text(xml_content)
+                    if not clean_text:
+                        log.warning(f"No text extracted for {doc_id}. Skipping.")
+                        continue
+                    
+                    doc_data = {
+                        "id": doc_id,
+                        "date": date_str,
+                        "url": f"https://www.boe.es/diario_boe/txt.php?id={doc_id}",
+                        "texto_limpio": clean_text
+                    }
+                    
+                    # 6. --- Save to disk (Atomic operation) ---
+                    io_helpers.save_to_jsonl(doc_data, str(OUTPUT_FILE))
+                    io_helpers.save_processed_id(doc_id, str(PROCESSED_IDS_FILE))
+                    existing_ids.add(doc_id)
+                    # --- End of save operation ---
+
+                log.info(f"Date {date_str} completed. Found {new_docs_this_day} new documents.")
+                total_new_docs_processed += new_docs_this_day
                 current_date += timedelta(days=1)
-                continue
 
-            log.info(f"Found {len(doc_ids)} documents for {date_str}. Checking against cache...")
-            
-            new_docs_this_day = 0
-            for doc_id in doc_ids:
-                
-                # 4. === THE IDEMPOTENCY CHECK ===
-                if doc_id in existing_ids:
-                    # Use log.debug for "spammy" messages, so we only see them
-                    # if we set the log level to DEBUG.
-                    log.debug(f"ID {doc_id} already processed. Skipping.")
-                    continue
-                
-                # 5. Process the new document
-                new_docs_this_day += 1
-                xml_content = await api_client.fetch_document_xml(client, doc_id)
-                if not xml_content:
-                    continue  # Error already logged by api_client
+    except Exception as e:
+        # --- 4. Global Error Catcher ---
+        log.error(f"CRITICAL ERROR! Ingestion task failed unexpectedly: {e}", exc_info=True)
+        # exc_info=True prints the full stack trace
 
-                clean_text = parsing_service.parse_legal_text(xml_content)
-                if not clean_text:
-                    log.warning(f"No text extracted for {doc_id}. Skipping.")
-                    continue
-                
-                doc_data = {
-                    "id": doc_id,
-                    "date": date_str,
-                    "url": f"https://www.boe.es/diario_boe/txt.php?id={doc_id}",
-                    "texto_limpio": clean_text
-                }
-                
-                # 6. --- Save to disk (Atomic operation) ---
-                
-                # a) Save the main data payload
-                io_helpers.save_to_jsonl(doc_data, str(OUTPUT_FILE))
-                
-                # b) Save the ID to our cache to prevent re-processing
-                io_helpers.save_processed_id(doc_id, str(PROCESSED_IDS_FILE))
-                
-                # c) Update the in-memory set for this run
-                existing_ids.add(doc_id)
-                # --- End of save operation ---
-
-            log.info(f"Date {date_str} completed. Found {new_docs_this_day} new documents.")
-            total_new_docs_processed += new_docs_this_day
-            current_date += timedelta(days=1)
-    
-    log.info(f"Ingestion task finished. Processed {total_new_docs_processed} new documents.")
-    log.info(f"Total unique documents in cache: {len(existing_ids)}")
-    
+    finally:
+        # --- 5. Guaranteed Final Log ---
+        # This block will ALWAYS run, even if the task crashes.
+        log.info("="*50)
+        log.info(f"INGESTION TASK FINISHED (Run complete)")
+        log.info(f"Total new documents processed in THIS RUN: {total_new_docs_processed}")
+        log.info(f"Total unique documents in cache: {len(existing_ids)}")
+        log.info("="*50)
