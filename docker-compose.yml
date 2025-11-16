@@ -8,11 +8,14 @@ services:
       - "3000:3000"
     environment:
       - FASTAPI_ML_URL=http://backend-ml:8000
+      - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
     depends_on:
       - backend-ml
 
   # ML Service (FastAPI)
   backend-ml:
     build: ./backend-ml
+    environment:
+      - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
     ports:
       - "8001:8000"

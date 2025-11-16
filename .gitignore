@@ -59,15 +59,25 @@ coverage/
 *.swp
 *.swo
 
-# VSCode (Mejorado)
+# VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# DVC (MLOps)
+# DVC
 .dvc/cache
 
 # Docker
 docker-logs/
+
+# Raw and Processed Data
+/backend-ml/data/raw_boe/raw_data.jsonl
+/backend-ml/data/raw_boe/processed_ids.txt
+/backend-ml/data/knowledge_chunks.jsonl
+/backend-ml/data/embeddings.npy
+
+# Trained or downloaded models
+/backend-ml/models/
+!/backend-ml/models/.gitkeep
