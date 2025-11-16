@@ -40,7 +40,8 @@ def parse_legal_text(xml_content: str) -> str:
         if not all_paragraphs:
             # This fallback is now much less likely to be called.
             log.warning("<texto> tag was found but contained no <p> tags. Using fallback.")
-            return " ".join(text_element.get_text(strip=True).split())
+            fallback_text = " ".join(text_element.get_text(strip=True).split())
+            return fallback_text.replace("\xa0", " ")
 
         # Extract the text from each <p> tag, stripping leading/trailing whitespace
         text_lines = [p.get_text(strip=True) for p in all_paragraphs]
@@ -51,8 +52,10 @@ def parse_legal_text(xml_content: str) -> str:
         # Join all lines with a newline. This preserves the document's
         # structure, which is semantically very important for an LLM.
         clean_text = "\n".join(non_empty_lines)
-        
-        return clean_text
+
+        normalized_text = clean_text.replace("\xa0", " ")
+
+        return normalized_text
 
     except Exception as e:
         log.error(f"An unexpected error occurred during XML parsing: {e}")

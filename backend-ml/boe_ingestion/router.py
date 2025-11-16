@@ -13,7 +13,6 @@ from .orchestrator import ingest_boe_data
 log = logging.getLogger(__name__)
 
 # Fetch the required API key from environment variables.
-# This is critical for production: the key is NOT hardcoded.
 ML_ADMIN_API_KEY = os.getenv("ML_ADMIN_API_KEY")
 
 
@@ -42,7 +41,7 @@ async def verify_api_key(x_api_key: str = Header(..., description="Admin API Key
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
-    # NEW: Apply the security dependency to ALL endpoints in this router.
+    # Apply the security dependency to ALL endpoints in this router.
     dependencies=[Depends(verify_api_key)]
 )
 
@@ -55,14 +54,14 @@ class IngestRequest(BaseModel):
     start_date: str = Field(
         ...,
         pattern=r"^\d{8}$",
-        example="20230101",
-        description="Start date in YYYYMMDD format"
+        description="Start date in YYYYMMDD format",
+        json_schema_extra={"example": "20230101"}
     )
     end_date: str = Field(
         ...,
         pattern=r"^\d{8}$",
-        example="20230131",
-        description="End date in YYYYMMDD format"
+        description="End date in YYYYMMDD format",
+        json_schema_extra={"example": "20230131"}
     )
 
 
