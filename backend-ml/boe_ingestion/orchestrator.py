@@ -151,6 +151,7 @@ async def ingest_boe_data(start_date_str: str, end_date_str: str):
         log.error(f"CRITICAL ERROR! Ingestion task failed unexpectedly: {e}", exc_info=True)
         # exc_info=True prints the full stack trace
 
+    # --- TODO: Finally logs not showing on server ---
     finally:
         # --- 5. Guaranteed Final Log ---
         # This block will ALWAYS run, even if the task crashes.
