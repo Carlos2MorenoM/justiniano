@@ -4,8 +4,8 @@ Initializes the app and includes all routers.
 """
 
 from fastapi import FastAPI
-# V IMPORTANTE: ¿Está esta línea de importación?
 from boe_ingestion.router import router as boe_router
+from rag_agent.router import router as rag_router
 
 app = FastAPI(
     title="ML Backend Service",
@@ -21,3 +21,4 @@ def get_status():
     return {"status": "ok", "service": "backend-ml"}
 
 app.include_router(boe_router)
+app.include_router(rag_router)
