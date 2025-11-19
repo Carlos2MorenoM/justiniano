@@ -82,10 +82,15 @@ class RagService:
 
         for hit in hits:
             doc_id = hit.payload.get('original_id', 'Unknown')
+            doc_text = hit.payload.get('text', 'Content Not Available.')
             source_ids.append(doc_id)
             # If we had text in payload: context_text += hit.payload.get('text', '') + "\n\n"
             # Since we don't, let's just list the sources for the LLM to reference.
-            context_text += f"Document ID: {doc_id} (Relevant legal section)\n"
+            score = hit.score
+            log.info(f"   -> Hit: {doc_id} (Score: {score:.4f})")
+
+            context_text += f"--- Documento: {doc_id} (Relevancia: {score:.2f}) ---\n"
+            context_text += f"{doc_text}\n\n"
 
         return context_text, source_ids
 
