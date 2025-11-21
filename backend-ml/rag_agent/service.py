@@ -27,7 +27,7 @@ COLLECTION_NAME = "boe_legal_docs"
 
 # Model Definitions
 MODEL_FREE = "llama3.1:8b"
-MODEL_PRO = "mistral-nemo"
+MODEL_PRO = "gemma2"
 
 class RagService:
     def __init__(self):
@@ -62,7 +62,7 @@ class RagService:
             - A list of source document IDs.
         """
         log.info(f"🔍 Buscando en Qdrant para: '{query}'")
-        
+
         # 1. Vectorize query
         query_vector = self.embedder.encode(query)
 
