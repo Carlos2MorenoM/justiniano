@@ -2,14 +2,30 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConversationsModule } from './conversations/conversations.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({isGlobal: true}),
+    // Load environment variables globally
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    // Async MongoDB connection configuration
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        // If MONGO_URI is missing, the app will crash at startup with a clear error.
+        uri: configService.getOrThrow<string>('MONGO_URI'),
+      }),
+      inject: [ConfigService],
+    }),
+
     HttpModule,
+    ConversationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
+

@@ -17,8 +17,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 host = os.getenv("QDRANT_HOST", "VALOR_POR_DEFECTO")
-print(f"DEBUG: Leyendo QDRANT_HOST del entorno: '{host}'")
+
+# Basic logging configuration to ensure we see output in Docker logs
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
 log = logging.getLogger(__name__)
+
+print(f"DEBUG: Reading QDRANT_HOST from env: '{host}'")
+
 
 # --- Configuration ---
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
@@ -61,7 +70,7 @@ class RagService:
             - A single string with all concatenated text chunks.
             - A list of source document IDs.
         """
-        log.info(f"🔍 Buscando en Qdrant para: '{query}'")
+        log.info(f"🔍 Searching Qdrant for: '{query}'")
 
         # 1. Vectorize query
         query_vector = self.embedder.encode(query)
@@ -69,8 +78,6 @@ class RagService:
         # 2. Search Qdrant
         # TODO: Phase 4 - Connect to MongoDB or store text in Qdrant payload.
         
-        # Let's assume for THIS STEP that we only get IDs. 
-        # We will instruct the LLM to simulate knowledge or admit it needs the text source.
         hits = self.qdrant.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
@@ -84,8 +91,7 @@ class RagService:
             doc_id = hit.payload.get('original_id', 'Unknown')
             doc_text = hit.payload.get('text', 'Content Not Available.')
             source_ids.append(doc_id)
-            # If we had text in payload: context_text += hit.payload.get('text', '') + "\n\n"
-            # Since we don't, let's just list the sources for the LLM to reference.
+            
             score = hit.score
             log.info(f"   -> Hit: {doc_id} (Score: {score:.4f})")
 
@@ -94,12 +100,13 @@ class RagService:
 
         return context_text, source_ids
 
-    async def chat_stream(self, query: str, user_tier: str) -> AsyncGenerator[str, None]:
+    async def chat_stream(self, query: str, history: List[Dict[str, Any]], user_tier: str) -> AsyncGenerator[str, None]:
         """
         Generates a streaming response from the LLM using RAG.
 
         Args:
             query: The user's input.
+            history: List of previous conversation messages (from BFF/Mongo).
             user_tier: 'free' or 'pro'. Determines the model used.
         """
         # 1. Select Model
@@ -119,13 +126,23 @@ class RagService:
             f"CONTEXTO DISPONIBLE:\n{context_str}"
         )
 
+        # --- HISTORY LOGIC ---
+        # Construct the full message chain for Ollama
+        
+        # A. Start with System Prompt
+        messages_payload = [{'role': 'system', 'content': system_prompt}]
+        
+        # B. Add History (if provided by BFF)
+        if history:
+            messages_payload.extend(history)
+
+        # C. Add Current User Query
+        messages_payload.append({'role': 'user', 'content': query})
+
         # 4. Call Ollama (Streaming)
         stream = ollama.chat(
             model=model_name,
-            messages=[
-                {'role': 'system', 'content': system_prompt},
-                {'role': 'user', 'content': query},
-            ],
+            messages=messages_payload,
             stream=True,
         )
 

@@ -28,6 +28,6 @@ async def chat_endpoint(
     
     # We use StreamingResponse to send tokens as they are generated
     return StreamingResponse(
-        rag_service.chat_stream(request.query, x_user_tier),
+        rag_service.chat_stream(request.query, request.history, x_user_tier),
         media_type="text/event-stream"
     )

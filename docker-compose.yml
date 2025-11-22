@@ -11,6 +11,8 @@ services:
       - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
     depends_on:
       - backend-ml
+    networks:
+      - justiniano-network
 
   # ML Service (FastAPI)
   backend-ml:
@@ -19,6 +21,8 @@ services:
       - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
     ports:
       - "8001:8000"
+    networks:
+      - justiniano-network
 
   qdrant-db:
     image: qdrant/qdrant:v1.15.5
@@ -30,3 +34,24 @@ services:
       - ./qdrant_storage:/qdrant/storage
     environment:
       - QDRANT__SERVICE__ENABLE_TELEMETRY=false
+    networks:
+      - justiniano-network
+  
+  mongo-db:
+    mongo-db:
+    image: mongo:6.0
+    container_name: justiniano_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo_data:/data/db
+    environment:
+      # Docker inyectará aquí los valores de tu archivo .env
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    networks:
+      - justiniano-network
+  
+  networks:
+  justiniano-network:
+    driver: bridge
