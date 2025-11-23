@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConversationsModule } from './conversations/conversations.module';
+import { ChatModule } from './chat/chat.module'
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ConversationsModule } from './conversations/conversations.module';
 
     HttpModule,
     ConversationsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
