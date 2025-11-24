@@ -7,8 +7,7 @@ services:
     environment:
       - FASTAPI_ML_URL=http://backend-ml:8000
       - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
-      - MONGO_USER=${MONGO_USER}
-      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo-db:27017/justiniano?authSource=admin
     depends_on:
       - backend-ml
       - mongo-db

@@ -78,6 +78,7 @@ docker-logs/
 /backend-ml/data/knowledge_chunks.jsonl
 /backend-ml/data/embeddings.npy
 /backend-ml/data/outputs/*
+mongo_data/
 
 # Trained or downloaded models
 /backend-ml/models/
