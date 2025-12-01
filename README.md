@@ -13,9 +13,23 @@ The project implements a microservices architecture with a Freemium model (Free/
 - Persistent History: Session and conversation context management via MongoDB.
 ---
 ## 🛠️ Tech Stack
-### Backend - BFF (Backend for Frontend) - Framework: NestJS (Node.js/TypeScript). - Responsibility: Authentication, history management (Mongo), rate limiting, orchestration to ML. - Database: MongoDB (Chat persistence).
-### Backend - ML (Machine Learning Service) - Framework: FastAPI (Python). - Responsibility: Data ingestion, RAG (Retrieval), Embedding generation, LLM connection. - Vector DB: Qdrant (Dockerized). - LLM Engine: Ollama (Local inference). - Tools: `SentenceTransformers`, `BeautifulSoup4`, `Httpx`.
-### Infrastructure & DevOps - Containerization: Docker & Docker Compose. - Data Versioning: DVC (Data Version Control) with Google Drive remote. - Testing: Pytest (Backend ML) and Jest (BFF).
+
+### Backend - BFF (Backend for Frontend)
+- **Framework:** NestJS (Node.js/TypeScript).
+- **Responsibility:** Authentication, history management (Mongo), rate limiting, orchestration to ML.
+- **Database:** MongoDB (Chat persistence).
+
+### Backend - ML (Machine Learning Service)
+- **Framework:** FastAPI (Python).
+- **Responsibility:** Data ingestion, RAG (Retrieval), Embedding generation, LLM connection.
+- **Vector DB:** Qdrant (Dockerized).
+- **LLM Engine:** Ollama (Local inference).
+- **Tools:** `SentenceTransformers`, `BeautifulSoup4`, `Httpx`.
+
+### Infrastructure & DevOps
+- **Containerization:** Docker & Docker Compose.
+- **Data Versioning:** DVC (Data Version Control) with Google Drive remote.
+- **Testing:** Pytest (Backend ML) and Jest (BFF).
 ---
 ## 🏗️ System Architecture
 ```mermaid
@@ -95,4 +109,5 @@ The project follows a modular evolutionary strategy.
 ```
 ## 📝 License
 --- Developed with ❤️ and lots of coffee in Valladolid, Spain.
+
 
