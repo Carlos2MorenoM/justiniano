@@ -1,4 +1,3 @@
-# backend-ml/test_search.py
 """
 RAG Verification Script.
 
@@ -12,6 +11,7 @@ Usage:
     python test_search.py
 """
 
+import os
 import time
 import logging
 from qdrant_client import QdrantClient
@@ -21,7 +21,7 @@ from sentence_transformers import SentenceTransformer
 # The query to test. Change this string to test different legal concepts.
 QUERY = "subvenciones para placas solares fotovoltaicas" 
 COLLECTION_NAME = "boe_legal_docs"
-QDRANT_HOST = "localhost"
+QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = 6333
 
 # Configure logging

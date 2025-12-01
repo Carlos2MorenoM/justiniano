@@ -21,6 +21,7 @@ services:
       - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
       - QDRANT_HOST=qdrant-db
       - QDRANT_PORT=6333
+      - OLLAMA_HOST=http://192.168.1.15:11434
     ports:
       - "8001:8000"
     depends_on:
@@ -36,7 +37,7 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-      - ./qdrant_storage:/qdrant/storage
+      - qdrant_data:/qdrant/storage
     environment:
       - QDRANT__SERVICE__ENABLE_TELEMETRY=false
     networks:
@@ -59,3 +60,6 @@ services:
 networks:
   justiniano-network:
     driver: bridge
+
+volumes:
+  qdrant_data:
