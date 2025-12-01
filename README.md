@@ -3,7 +3,14 @@ Justiniano is an Agentic Retrieval-Augmented Generation (RAG) system designed fo
 The project implements a microservices architecture with a Freemium model (Free/Pro Tier) that adjusts the Large Language Model (LLM) power according to the user's level.
 ---
 ## 🚀 Key Features
-- Modular Agentic RAG: Clear separation between business orchestration (BFF) and intelligence (ML Service). - Idempotent BOE Ingestion: Robust pipeline to consume, parse (XML), and clean Spanish regulations, avoiding duplicates. - Advanced Semantic Search: Vector engine based on Qdrant and BGE-M3 embeddings, with intelligent semantic chunking by articles and provisions. - Local & Hybrid Inference: Native integration with Ollama to run models like Llama 3.1 and Gemma 2/Mistral locally (CPU/GPU). - Tiered Architecture: - Free Tier: Fast responses using lightweight models (e.g., Llama 3.1 8B). - Pro Tier: Deep reasoning and agentic capabilities using larger models. - Persistent History: Session and conversation context management via MongoDB.
+- Modular Agentic RAG: Clear separation between business orchestration (BFF) and intelligence (ML Service). 
+- Idempotent BOE Ingestion: Robust pipeline to consume, parse (XML), and clean Spanish regulations, avoiding duplicates. 
+- Advanced Semantic Search: Vector engine based on Qdrant and BGE-M3 embeddings, with intelligent semantic chunking by articles and provisions. 
+- Local & Hybrid Inference: Native integration with Ollama to run models like Llama 3.1 and Gemma 2/Mistral locally (CPU/GPU). 
+- Tiered Architecture: 
+- Free Tier: Fast responses using lightweight models (e.g., Llama 3.1 8B). 
+- Pro Tier: Deep reasoning and agentic capabilities using larger models. 
+- Persistent History: Session and conversation context management via MongoDB.
 ---
 ## 🛠️ Tech Stack
 ### Backend - BFF (Backend for Frontend) - Framework: NestJS (Node.js/TypeScript). - Responsibility: Authentication, history management (Mongo), rate limiting, orchestration to ML. - Database: MongoDB (Chat persistence).
@@ -88,3 +95,4 @@ The project follows a modular evolutionary strategy.
 ```
 ## 📝 License
 --- Developed with ❤️ and lots of coffee in Valladolid, Spain.
+
