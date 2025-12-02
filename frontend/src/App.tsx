@@ -1,28 +1,34 @@
-import { Scale } from 'lucide-react';
+import { Logo } from './components/Logo';
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center space-y-6">
+    <div className="min-h-screen flex flex-col items-center justify-center space-y-8 bg-corpus-base">
 
-      {/* Header con Púrpura Imperial */}
-      <header className="text-center space-y-2">
-        <div className="flex justify-center text-corpus-structure">
-          <Scale size={64} strokeWidth={1.5} />
+      {/* Brand Header */}
+      <header className="text-center space-y-4">
+        <div className="flex justify-center">
+          <Logo size={80} />
         </div>
-        <h1 className="text-5xl font-bold">Justiniano</h1>
-        <p className="text-corpus-text/80 italic font-serif">Tu Agente Legal Inteligente</p>
+        <div>
+          <h1 className="text-5xl font-bold tracking-tight text-corpus-structure">
+            Justiniano
+          </h1>
+          <p className="text-corpus-structure/70 italic font-serif mt-2 text-lg">
+            Corpus Iuris Civilis Digital
+          </p>
+        </div>
       </header>
 
-      {/* Tarjeta de prueba */}
-      <div className="bg-white p-8 rounded-lg shadow-lg border border-corpus-muted max-w-md w-full">
-        <h2 className="text-2xl mb-4">Estado del Sistema</h2>
-        <p className="mb-6 leading-relaxed">
-          El sistema está listo para recibir consultas sobre el BOE.
-          La arquitectura RAG está activa.
+      {/* Status Card */}
+      <div className="bg-white/80 backdrop-blur-sm p-8 rounded-xl shadow-xl shadow-corpus-structure/5 border border-corpus-muted/50 max-w-md w-full text-center space-y-6">
+        <h2 className="text-2xl font-serif text-corpus-structure">
+          Bienvenido, Legista
+        </h2>
+        <p className="leading-relaxed text-corpus-text/90">
+          El sistema RAG está operacional. Acceda al conocimiento jurídico consolidado.
         </p>
 
-        {/* Botón con Oro Bizantino */}
-        <button className="w-full bg-corpus-structure text-white font-medium py-3 px-4 rounded hover:bg-corpus-structure/90 transition-colors border-b-4 border-corpus-accent active:border-b-0 active:translate-y-1">
+        <button className="w-full bg-corpus-structure text-white font-medium py-3 px-4 rounded-lg hover:bg-corpus-structure/90 transition-all duration-200 border-b-4 border-corpus-accent active:border-b-0 active:translate-y-[2px] shadow-md hover:shadow-lg">
           Iniciar Consulta
         </button>
       </div>
