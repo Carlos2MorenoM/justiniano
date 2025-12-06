@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import typography from '@tailwindcss/typography';
+
 export default {
     content: [
         "./index.html",
@@ -7,20 +9,38 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Paleta "Justiniano"
                 corpus: {
-                    base: "#F5F5F2",      // Off-White / Crema Claro (Fondo Principal)
-                    structure: "#3E0040", // Púrpura Imperial Tirio (Nav, Headers)
-                    accent: "#D4AF37",    // Oro Bizantino Antiguo (Botones, Alertas)
-                    text: "#1A1A1A",      // Negro suave para lectura
-                    muted: "#E5E5E5",     // Gris suave para bordes/divisores
+                    base: "#F5F5F2",
+                    structure: "#3E0040",
+                    accent: "#D4AF37",
+                    text: "#1A1A1A",
+                    muted: "#E5E5E5",
                 }
             },
             fontFamily: {
-                serif: ['Merriweather', 'serif'], // Toque legal/clásico
-                sans: ['Inter', 'sans-serif'],    // UI moderna
-            }
+                serif: ['Merriweather', 'serif'],
+                sans: ['Inter', 'sans-serif'],
+            },
+            typography: (theme) => ({
+                DEFAULT: {
+                    css: {
+                        color: theme('colors.corpus.text'),
+                        a: {
+                            color: theme('colors.corpus.structure'),
+                            '&:hover': {
+                                color: theme('colors.corpus.accent'),
+                            },
+                        },
+                        strong: {
+                            color: theme('colors.corpus.structure'),
+                        },
+                        '--tw-prose-bullets': theme('colors.corpus.accent'),
+                    },
+                },
+            }),
         },
     },
-    plugins: [],
+    plugins: [
+        typography,
+    ],
 }
