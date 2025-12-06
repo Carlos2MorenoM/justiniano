@@ -3,6 +3,7 @@ import { User, Scale } from 'lucide-react';
 
 import { twMerge } from 'tailwind-merge';
 import type { Message } from '../types/chat';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageBubbleProps {
     message: Message;
@@ -57,10 +58,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
                         {isUser ? "Consultante" : "Justiniano"}
                     </p>
 
-                    {/* Message Body - preserve whitespace for formatting */}
-                    <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">
-                        {message.content}
+                    <div className={twMerge(
+                        "text-sm md:text-base leading-relaxed",
+                        !isUser && "prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-li:my-0"
+                    )}>
+                        <ReactMarkdown>
+                            {message.content}
+                        </ReactMarkdown>
                     </div>
+
 
                     {/* Metadata Footer (Model used, timestamps, etc) */}
                     {message.metadata && !isUser && (
