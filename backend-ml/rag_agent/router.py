@@ -1,11 +1,15 @@
 """
 API Router for the RAG Agent.
-Handles chat endpoints and tier-based logic.
+Handles chat endpoints without heavy evaluation overhead.
 """
+import logging
 from fastapi import APIRouter, Header
 from fastapi.responses import StreamingResponse
 from .schemas import ChatRequest
 from .service import rag_service
+
+# Setup logging
+log = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/chat",
@@ -19,14 +23,10 @@ async def chat_endpoint(
 ):
     """
     Streaming chat endpoint.
-    
-    - **Free Tier**: Uses Llama 3.1 8B. Fast, basic RAG.
-    - **Pro Tier**: Uses Mistral NeMo 12B. Slower, deeper reasoning (Agent capabilities).
-    
-    Returns a Server-Sent Events (SSE) stream of the response.
+     Optimized for low latency: No background evaluation.
     """
     
-    # We use StreamingResponse to send tokens as they are generated
+    # Just stream the response directly. No extra tasks.
     return StreamingResponse(
         rag_service.chat_stream(request.query, request.history, x_user_tier),
         media_type="text/event-stream"

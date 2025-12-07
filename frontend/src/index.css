@@ -1,0 +1,24 @@
+/* 1. Import fonts: Inter (UI) and Merriweather (Legal) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');
+
+/* 2. Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. Base styles "Justiniano" */
+@layer base {
+  body {
+    @apply bg-corpus-base text-corpus-text font-sans antialiased;
+  }
+
+  /* Headings always with serif for legal authority */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif text-corpus-structure;
+  }
+}
