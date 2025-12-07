@@ -1,4 +1,15 @@
 /**
+ * Ragas Evaluation Metrics.
+ * Scores range from 0.0 to 1.0.
+ */
+export interface EvaluationMetrics {
+    /** Measures factual consistency with the retrieved context (Hallucination check) */
+    faithfulness: number;
+    /** Measures how well the response addresses the user's query */
+    answer_relevancy: number;
+}
+
+/**
  * Represents a single message within the chat history.
  */
 export interface Message {
@@ -6,16 +17,24 @@ export interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
-    /** Optional metadata for RAG context, model info, or latency metrics */
-    metadata?: Record<string, any>;
+    /**
+     * Flexible metadata container.
+     * Stores model info, user tier, and quality metrics when available.
+     */
+    metadata?: {
+        model?: string;
+        tier?: string;
+        metrics?: EvaluationMetrics;
+        [key: string]: any;
+    };
 }
 
 /**
- * Represents the holistic state of the chat interface.
+ * Global state interface for the Chat hook.
  */
 export interface ChatState {
     messages: Message[];
-    isLoading: boolean;     // True while waiting for the initial server handshake
-    isStreaming: boolean;   // True while receiving text chunks via SSE
+    isLoading: boolean;
+    isStreaming: boolean;
     error: string | null;
 }

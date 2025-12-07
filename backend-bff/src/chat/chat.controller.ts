@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Res, Headers, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Headers,
+  Logger,
+  Get,
+  Param,
+  NotFoundException
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -6,6 +16,10 @@ import { ConversationsService } from '../conversations/conversations.service';
 import { ChatRequestDto } from './dto/chat-request.dto';
 import { firstValueFrom } from 'rxjs';
 
+/**
+ * Controller responsible for handling Chat interactions and Evaluation retrieval.
+ * Acts as an orchestration layer between the Frontend and the Python ML Service.
+ */
 @Controller('chat')
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
@@ -19,37 +33,72 @@ export class ChatController {
     this.mlServiceUrl = this.configService.getOrThrow<string>('FASTAPI_ML_URL');
   }
 
+  /**
+   * Retrieves the evaluation metrics for a specific message ID.
+   * Proxies the request to the ML backend.
+   * * @param messageId - The UUID of the message to check.
+   * @returns The evaluation metrics if ready.
+   * @throws NotFoundException if the evaluation is still pending or does not exist.
+   */
+  @Get('evaluation/:id')
+  async getEvaluation(@Param('id') messageId: string) {
+    this.logger.debug(`Polling evaluation metrics for message: ${messageId}`);
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.mlServiceUrl}/chat/evaluation/${messageId}`)
+      );
+      return response.data;
+    } catch (error) {
+      // If ML service returns 404, it usually means the background task hasn't finished yet.
+      if (error.response?.status === 404) {
+        throw new NotFoundException('Evaluation pending or not found');
+      }
+      this.logger.error(`Error fetching evaluation proxy: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Main Chat Endpoint.
+   * 1. Saves user message to MongoDB.
+   * 2. Forwards request to ML Service (streaming).
+   * 3. Streams response back to client via SSE.
+   * 4. Triggers background evaluation in ML Service.
+   * 5. Persists assistant response to MongoDB upon stream completion.
+   */
   @Post()
   async chat(
     @Body() body: ChatRequestDto,
-    @Headers('x-user-tier') userTier: string = 'free', // Default to free
-    @Headers('x-user-id') userId: string = 'default-user', // Mock user for now
+    @Headers('x-user-tier') userTier: string = 'free',
+    @Headers('x-user-id') userId: string = 'default-user',
     @Res() res: Response,
   ) {
-    this.logger.log(`Processing chat for user ${userId} (Tier: ${userTier})`);
+    // Generate or extract a consistent ID for this interaction.
+    // This ID links the User Prompt, ML Response, and Ragas Evaluation.
+    // We allow the frontend to supply it to facilitate client-side state management.
+    const messageId = body['messageId'] || crypto.randomUUID();
 
-    // 1. Save User Message to MongoDB
-    await this.conversationsService.addMessage(userId, 'user', body.message);
+    this.logger.log(`Processing chat interaction [${messageId}] for user ${userId} (Tier: ${userTier})`);
 
-    // 2. Retrieve History for Context
-    // We get the full conversation document to inject into the ML context
+    // 1. Persist User Intent
+    await this.conversationsService.addMessage(userId, 'user', body.message, { messageId });
+
+    // 2. Prepare Context (Retrieve history)
     const conversation = await this.conversationsService.findOrCreate(userId);
-    
-    // Format history for ML (exclude the just-added message to avoid duplication if needed, 
-    // but usually ML expects previous context. Let's clean it up.)
     const historyPayload = conversation.messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-    })).slice(0, -1); // Remove the last one we just added, as it is sent as 'query'
+      role: msg.role,
+      content: msg.content
+    })).slice(0, -1); // Exclude the current message we just added
 
-    // 3. Call ML Backend with Streaming
     try {
+      // 3. Forward to ML Backend
       const response = await this.httpService.axiosRef({
         method: 'post',
         url: `${this.mlServiceUrl}/chat`,
         data: {
           query: body.message,
-          history: historyPayload, 
+          history: historyPayload,
+          message_id: messageId // Crucial: Send ID to ML for tracking evaluation
         },
         headers: {
           'X-User-Tier': userTier,
@@ -58,39 +107,42 @@ export class ChatController {
         responseType: 'stream',
       });
 
-      // 4. Pipe the stream to the client and accumulate text
       const stream = response.data;
       let fullResponseText = '';
 
-      // Set headers for Server-Sent Events (SSE) compatibility
+      // Set headers for Server-Sent Events (SSE)
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Message-Id', messageId); // Return ID to client
 
+      // 4. Handle Stream
       stream.on('data', (chunk: Buffer) => {
         const textChunk = chunk.toString();
         fullResponseText += textChunk;
-        res.write(textChunk); // Forward chunk to frontend
+        res.write(textChunk); // Pipe chunk to client
       });
 
       stream.on('end', async () => {
-        // 5. Save Assistant Response to MongoDB when stream finishes
-        this.logger.log('Stream finished. Saving response to DB.');
+        this.logger.log(`Stream finished for [${messageId}]. Persisting response.`);
+
+        // 5. Persist Assistant Response
         await this.conversationsService.addMessage(userId, 'assistant', fullResponseText, {
-            model: userTier === 'pro' ? 'Gemma' : 'Llama 3.1',
-            timestamp: new Date()
+          model: userTier === 'pro' ? 'Gemma 2' : 'Llama 3.1',
+          tier: userTier,
+          evaluationId: messageId // Link to future evaluation metrics
         });
         res.end();
       });
 
       stream.on('error', (err) => {
-        this.logger.error('Stream error:', err);
-        res.end(); // Close connection on error
+        this.logger.error('Stream transmission error:', err);
+        res.end();
       });
 
     } catch (error) {
-      this.logger.error('Error calling ML Backend', error.message);
-      res.status(500).json({ error: 'Failed to connect to AI Agent' });
+      this.logger.error('Failed to establish connection with ML Backend', error.message);
+      res.status(500).json({ error: 'AI Agent unavailable' });
     }
   }
 }
