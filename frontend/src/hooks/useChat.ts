@@ -1,14 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
 import type { Message } from '../types/chat';
 
-// TODO: Move to environment variables (VITE_API_URL) for production
+// TODO: Use environment variables for production API URL
 const API_URL = 'http://localhost:3000/chat';
 
+export type UserTier = 'free' | 'pro';
+
 /**
- * Custom hook to manage chat logic, including state management,
- * API communication, and Server-Sent Events (SSE) streaming.
- *
- * @returns An object containing the chat state and the sendMessage function.
+ * Custom hook to manage chat state and API communication.
  */
 export function useChat() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -16,14 +15,11 @@ export function useChat() {
     const [isStreaming, setIsStreaming] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Reference to the AbortController to cancel pending requests if needed
+    const [currentTier, setCurrentTier] = useState<UserTier>('free');
+    const [lastMetrics, setLastMetrics] = useState<{ latencyMs?: number }>({});
+
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    /**
-     * Sends a message to the RAG Agent and handles the streaming response.
-     *
-     * @param content - The text content of the user's message.
-     */
     const sendMessage = useCallback(async (content: string) => {
         if (!content.trim()) return;
 
@@ -38,44 +34,54 @@ export function useChat() {
         setMessages((prev) => [...prev, userMessage]);
         setIsLoading(true);
         setError(null);
+        setLastMetrics({});
 
-        // Cancel any previous in-flight request to avoid race conditions
+        // Cancel previous request
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
         abortControllerRef.current = new AbortController();
 
+        const startTime = performance.now();
+        const assistantMessageId = crypto.randomUUID();
+
         try {
-            // 2. Initiate the POST request to the BFF
+            // 2. Request to Backend
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-user-tier': 'free',      // TODO: Make dynamic based on auth context
-                    'x-user-id': 'tester-frontend', // Mock user ID for dev
+                    'x-user-tier': currentTier,
+                    'x-user-id': 'tester-frontend',
                 },
-                // The backend expects 'message', not 'query' (handled by BFF DTO)
-                body: JSON.stringify({ message: content }),
+                body: JSON.stringify({ message: content, messageId: assistantMessageId }),
                 signal: abortControllerRef.current.signal,
             });
 
-            if (!response.ok) throw new Error('Failed to connect to Justiniano Agent');
-            if (!response.body) throw new Error('ReadableStream not supported in this browser');
+            if (!response.ok) throw new Error('Connection to Justiniano failed');
+            if (!response.body) throw new Error('Streaming not supported');
 
-            // 3. Prepare a placeholder message for the assistant's response
-            const assistantMessageId = crypto.randomUUID();
+            // 3. Calculate Latency (Time to First Byte)
+            const endTime = performance.now();
+            setLastMetrics({ latencyMs: Math.round(endTime - startTime) });
+
+            // 4. Prepare Assistant Message
             const assistantMessage: Message = {
                 id: assistantMessageId,
                 role: 'assistant',
                 content: '',
                 timestamp: new Date(),
+                metadata: {
+                    model: currentTier === 'pro' ? 'Gemma 2 (12B)' : 'Llama 3.1 (8B)',
+                    tier: currentTier
+                }
             };
 
             setMessages((prev) => [...prev, assistantMessage]);
             setIsLoading(false);
             setIsStreaming(true);
 
-            // 4. Process the SSE (Server-Sent Events) Stream
+            // 5. Process the SSE (Server-Sent Events) Stream
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let done = false;
@@ -93,7 +99,6 @@ export function useChat() {
                     setMessages((prev) => {
                         const newMessages = [...prev];
                         const lastMsgIndex = newMessages.findIndex(m => m.id === assistantMessageId);
-
                         if (lastMsgIndex !== -1) {
                             newMessages[lastMsgIndex] = {
                                 ...newMessages[lastMsgIndex],
@@ -106,18 +111,16 @@ export function useChat() {
             }
 
         } catch (err: any) {
-            // Ignore errors caused by manual abortion
             if (err.name !== 'AbortError') {
-                setError(err.message || 'Unknown error occurred');
-                console.error('Chat interaction failed:', err);
+                setError(err.message || 'Unknown error');
+                console.error('Chat error:', err);
             }
         } finally {
-            // Reset loading states and cleanup controller
             setIsLoading(false);
             setIsStreaming(false);
             abortControllerRef.current = null;
         }
-    }, []);
+    }, [currentTier]);
 
     return {
         messages,
@@ -125,5 +128,8 @@ export function useChat() {
         isLoading,
         isStreaming,
         error,
+        currentTier,
+        setTier: setCurrentTier,
+        lastMetrics
     };
 }

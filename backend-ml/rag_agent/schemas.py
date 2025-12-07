@@ -3,7 +3,7 @@ Pydantic schemas for the RAG Agent module.
 Defines the data structure for chat requests and responses.
 """
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 class ChatRequest(BaseModel):
     """
