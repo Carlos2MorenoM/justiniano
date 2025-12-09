@@ -67,7 +67,7 @@ export class DevelopersService {
     private async callLlm(prompt: string): Promise<{ code: string }> {
         const apiKey = this.configService.get<string>('GROQ_API_KEY');
         const groqModel = this.configService.get<string>('GROQ_MODEL');
-        if (!apiKey) {
+        if (!apiKey || !groqModel) {
             throw new InternalServerErrorException('GROQ_API_KEY or GROQ_MODEL is not defined in environment variables');
         }
 

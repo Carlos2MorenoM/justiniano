@@ -1,5 +1,14 @@
 import { useState } from 'react';
 
+// --- CONFIGURATION ---
+// 1. Define the API Base URL dynamically.
+// Vercel will inject the real backend URL here via 'VITE_API_URL'.
+// Localhost is used as a fallback for development.
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// 2. Construct the full endpoint URL, ensuring no double slashes.
+const GENERATE_SDK_URL = `${BASE_URL.replace(/\/$/, '')}/developers/generate-sdk`;
+
 type Language = 'python' | 'node';
 
 export const SdkGenerator = () => {
@@ -15,7 +24,7 @@ export const SdkGenerator = () => {
 
         try {
             // Assuming Vite proxy or CORS allows this call to localhost:3000
-            const response = await fetch('http://localhost:3000/developers/generate-sdk', {
+            const response = await fetch(GENERATE_SDK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ language }),
@@ -52,8 +61,8 @@ export const SdkGenerator = () => {
                             <button
                                 onClick={() => setLanguage('python')}
                                 className={`flex-1 py-3 px-4 rounded-md border text-sm font-medium transition-colors ${language === 'python'
-                                        ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
                                 Python (httpx)
@@ -61,8 +70,8 @@ export const SdkGenerator = () => {
                             <button
                                 onClick={() => setLanguage('node')}
                                 className={`flex-1 py-3 px-4 rounded-md border text-sm font-medium transition-colors ${language === 'node'
-                                        ? 'bg-green-50 border-green-500 text-green-700'
-                                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-green-50 border-green-500 text-green-700'
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
                                 Node.js (TypeScript)
