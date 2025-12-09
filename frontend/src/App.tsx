@@ -1,14 +1,31 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { DashboardLayout } from './layouts/DashboardLayout';
 import { ChatInterface } from './components/ChatInterface';
+import { SdkGenerator } from './components/SdkGenerator';
 
 /**
  * Root Application Component.
- * Serves as the main entry point, mounting the Chat Interface.
- * Future global providers (Auth, Theme, Toast notifications) should be wrapped here.
+ * Implements the Routing Strategy using the DashboardLayout template.
  */
 function App() {
   return (
-    // The ChatInterface handles its own internal states (Welcome vs Chat)
-    <ChatInterface />
+    <BrowserRouter>
+      <Routes>
+        {/* Main Layout Wrapper */}
+        <Route path="/" element={<DashboardLayout />}>
+
+          {/* Default Route: Chat */}
+          <Route index element={<ChatInterface />} />
+
+          {/* New Feature: Developers / SDK Generator */}
+          <Route path="developers" element={<SdkGenerator />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
