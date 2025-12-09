@@ -4,6 +4,8 @@ services:
     build: ./backend-bff
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - FASTAPI_ML_URL=http://backend-ml:8000
       - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
@@ -24,6 +26,8 @@ services:
       - OLLAMA_HOST=http://192.168.1.15:11434
     ports:
       - "8001:8000"
+    env_file:
+      - .env
     depends_on:
       - qdrant-db
     networks:
@@ -42,13 +46,15 @@ services:
       - QDRANT__SERVICE__ENABLE_TELEMETRY=false
     networks:
       - justiniano-network
-  
+
   # --- NoSQL Database (MongoDB) ---
   mongo-db:
     image: mongo:6.0
     container_name: justiniano_mongo
     ports:
       - "27017:27017"
+    env_file:
+      - .env
     volumes:
       - ./mongo_data:/data/db
     environment:
