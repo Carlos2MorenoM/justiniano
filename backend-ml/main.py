@@ -22,3 +22,9 @@ def get_status():
 
 app.include_router(boe_router)
 app.include_router(rag_router)
+
+if __name__ == "__main__":
+    # Importante: host="0.0.0.0" para que Railway lo vea
+    # Importante: leer el puerto de la variable de entorno PORT
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
