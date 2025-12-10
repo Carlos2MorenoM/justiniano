@@ -1,0 +1,9 @@
+node_modules
+dist
+venv
+.venv
+__pycache__
+.git
+.dvc
+backend-ml/models
+backend-ml/data
