@@ -60,8 +60,8 @@ class RagService:
         
         # 2. Load Embedding Model
         try:
-            log.info("Loading Embedding Model (sentence-transformers/all-MiniLM-L6-v2)...")
-            self.embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+            log.info("Loading Embedding Model (BAAI/bge-m3)...")
+            self.embedder = SentenceTransformer('BAAI/bge-m3')
             log.info("Embedding model loaded successfully.")
         except Exception as e:
             log.error(f"Failed to load embedding model: {e}")
