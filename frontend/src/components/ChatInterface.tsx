@@ -3,14 +3,15 @@ import { useChat } from '../hooks/useChat';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { Logo } from './Logo';
-import { ObservabilityPanel } from './ObservabilityPanel'; // <--- 1. Importar
+import { ObservabilityPanel } from './ObservabilityPanel';
 
 /**
- * ChatInterface Container.
- * Orchestrates the chat view and the side observability panel.
+ * ChatInterface Component.
+ * Orchestrates the chat view and the observability side panel.
+ * Designed to fit within a parent layout container (h-full).
  */
 export const ChatInterface: React.FC = () => {
-    // 2. Extract properties from useChat
+    // Extract chat state and logic from the custom hook
     const {
         messages,
         sendMessage,
@@ -19,27 +20,28 @@ export const ChatInterface: React.FC = () => {
         error,
         currentTier,
         setTier,
-        lastMetrics
+        lastMetrics,
     } = useChat();
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // 3. Find the last assistant message to display its data in the panel
-    const lastAssistantMessage = [...messages].reverse().find(m => m.role === 'assistant');
+    // Identify the last assistant message to populate the observability panel
+    const lastAssistantMessage = [...messages]
+        .reverse()
+        .find((m) => m.role === 'assistant');
 
+    // Auto-scroll to bottom when new messages arrive or streaming updates occur
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isStreaming]);
 
     return (
-        // Use flex row to accommodate the sidebar (even if it's fixed, it helps mentally)
-        <div className="flex h-screen bg-corpus-base overflow-hidden">
-
+        // Root container adapts to the parent layout dimensions (DashboardLayout)
+        <div className="flex h-full w-full bg-corpus-base overflow-hidden">
             {/* --- Main Chat Area --- */}
-            {/* Add a right margin (mr-12) so the chat doesn't get covered by the collapsed panel */}
+            {/* 'mr-12' provides spacing for the collapsed state of the ObservabilityPanel */}
             <div className="flex-1 flex flex-col h-full relative transition-all duration-300 mr-12">
-
-                {/* Header */}
+                {/* Sticky Header */}
                 <header className="bg-white/80 backdrop-blur-md border-b border-corpus-muted p-4 sticky top-0 z-10 shadow-sm">
                     <div className="max-w-4xl mx-auto flex items-center gap-3">
                         <Logo size={32} />
@@ -49,38 +51,43 @@ export const ChatInterface: React.FC = () => {
                     </div>
                 </header>
 
-                {/* Messages */}
+                {/* Scrollable Message List */}
                 <main className="flex-1 overflow-y-auto p-4 scroll-smooth">
                     <div className="max-w-4xl mx-auto space-y-6 pb-4">
-
-                        {/* Empty State (Welcome) */}
+                        {/* Empty State / Welcome Screen */}
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 opacity-80">
                                 <Logo size={80} />
                                 <div className="max-w-md space-y-2">
-                                    <h2 className="text-2xl font-serif text-corpus-structure">Bienvenido al Archivo</h2>
+                                    <h2 className="text-2xl font-serif text-corpus-structure">
+                                        Bienvenido al Archivo
+                                    </h2>
                                     <p className="text-gray-600">
-                                        Seleccione su nivel de acceso en el panel lateral y comience su consulta legal.
+                                        Seleccione su nivel de acceso en el panel lateral y comience
+                                        su consulta legal.
                                     </p>
                                 </div>
                             </div>
                         )}
 
+                        {/* Message History */}
                         {messages.map((msg) => (
                             <MessageBubble key={msg.id} message={msg} />
                         ))}
 
+                        {/* Error Feedback */}
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg text-sm text-center mx-auto max-w-md animate-pulse">
                                 <p>⚠️ {error}</p>
                             </div>
                         )}
 
+                        {/* Scroll Anchor */}
                         <div ref={messagesEndRef} />
                     </div>
                 </main>
 
-                {/* Input */}
+                {/* Input Area */}
                 <ChatInput
                     onSend={sendMessage}
                     isLoading={isLoading && !isStreaming}
@@ -88,7 +95,7 @@ export const ChatInterface: React.FC = () => {
                 />
             </div>
 
-            {/* --- 4. The Observability Panel --- */}
+            {/* --- Right Sidebar: Observability Panel --- */}
             <ObservabilityPanel
                 currentTier={currentTier}
                 onTierChange={setTier}
@@ -96,7 +103,6 @@ export const ChatInterface: React.FC = () => {
                 lastMessageMeta={lastAssistantMessage?.metadata}
                 lastMessageContent={lastAssistantMessage?.content}
             />
-
         </div>
     );
 };

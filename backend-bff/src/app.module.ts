@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConversationsModule } from './conversations/conversations.module';
 import { ChatModule } from './chat/chat.module'
+import { DevelopersModule } from './developers/developers.module';
 
 @Module({
   imports: [
@@ -25,9 +26,10 @@ import { ChatModule } from './chat/chat.module'
     HttpModule,
     ConversationsModule,
     ChatModule,
+    DevelopersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
 

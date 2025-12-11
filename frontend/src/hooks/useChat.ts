@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import type { Message } from '../types/chat';
 
 // TODO: Use environment variables for production API URL
-const API_URL = 'http://localhost:3000/chat';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export type UserTier = 'free' | 'pro';
 
