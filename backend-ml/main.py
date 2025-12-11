@@ -8,6 +8,17 @@ from boe_ingestion.router import router as boe_router
 from rag_agent.router import router as rag_router
 import uvicorn
 import os
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="ML Backend Service",
