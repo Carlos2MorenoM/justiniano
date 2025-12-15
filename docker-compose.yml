@@ -9,10 +9,9 @@ services:
     environment:
       - FASTAPI_ML_URL=http://backend-ml:8000
       - ML_ADMIN_API_KEY=${ML_ADMIN_API_KEY}
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo-db:27017/justiniano?authSource=admin
+      - MONGO_URI=${MONGO_URI}
     depends_on:
       - backend-ml
-      - mongo-db
     networks:
       - justiniano-network
 

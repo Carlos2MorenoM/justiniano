@@ -4,7 +4,7 @@ import { useState } from 'react';
 // 1. Define the API Base URL dynamically.
 // Vercel will inject the real backend URL here via 'VITE_API_URL'.
 // Localhost is used as a fallback for development.
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const BASE_URL = "https://backend-bff-production.up.railway.app"
 
 // 2. Construct the full endpoint URL, ensuring no double slashes.
 const GENERATE_SDK_URL = `${BASE_URL.replace(/\/$/, '')}/developers/generate-sdk`;
