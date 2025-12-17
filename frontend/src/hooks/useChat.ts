@@ -2,10 +2,10 @@ import { useState, useCallback, useRef } from 'react';
 import type { Message } from '../types/chat';
 
 // TODO: Use environment variables for production API URL
-const BASE_URL = 'https://backend-bff-production.up.railway.app';
-
+//const BASE_URL = 'https://backend-bff-production.up.railway.app';
+const API_URL = 'http://localhost:3000/chat';
 // 2. Construct the full endpoint URL, ensuring no double slashes.
-const API_URL = `${BASE_URL.replace(/\/$/, '')}/chat`;
+//const API_URL = `${BASE_URL.replace(/\/$/, '')}/chat`;
 
 export type UserTier = 'free' | 'pro';
 
