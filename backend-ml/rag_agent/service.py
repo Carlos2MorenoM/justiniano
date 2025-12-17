@@ -47,16 +47,35 @@ class RagService:
         
         # 1. Connect to Qdrant
         # Logic adapted to support Qdrant Cloud (requires API Key) vs Local
-        if QDRANT_API_KEY:
-            log.info(f"Connecting to Qdrant Cloud: {QDRANT_HOST}")
+        
+        # Sanitize inputs to prevent "invalid Header" errors
+        host = QDRANT_HOST.strip()
+        port = int(QDRANT_PORT)
+        
+        # Ensure API Key is clean (no newlines/spaces) if present
+        api_key = QDRANT_API_KEY.strip() if QDRANT_API_KEY else None
+        if api_key == "":
+            api_key = None
+            
+        # Mask API key for logging
+        masked_key = f"{api_key[:4]}...{api_key[-4:]}" if api_key and len(api_key) > 8 else ("Present" if api_key else "None")
+        log.info(f"Connecting to Qdrant: {host} (Port: {port}, API Key: {masked_key})")
+
+        if host.startswith("http"):
+            # Cloud or explicit URL
             self.qdrant = QdrantClient(
-                url=QDRANT_HOST, 
-                api_key=QDRANT_API_KEY,
-                # Force port 6333 or use the one provided by cloud URL logic
+                url=host, 
+                api_key=api_key
             )
         else:
-            log.info(f"Connecting to Local Qdrant: {QDRANT_HOST}:{QDRANT_PORT}")
-            self.qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+            # Local or Hostname only
+            # Force https=False to prevent SSL errors if api_key is present (which defaults https to True)
+            self.qdrant = QdrantClient(
+                host=host, 
+                port=port, 
+                api_key=api_key,
+                https=False
+            )
         
         # 2. Load Embedding Model
         try:
@@ -88,11 +107,11 @@ class RagService:
 
         # 2. Search Qdrant (Cloud/Local Network)
         try:
-            hits = self.qdrant.search(
+            hits = self.qdrant.query_points(
                 collection_name=COLLECTION_NAME,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=limit
-            )
+            ).points
         except Exception as e:
             log.error(f"Qdrant search failed: {e}")
             # Fail gracefully so the chat can continue without context if DB is down
@@ -127,6 +146,7 @@ class RagService:
             "Usa la siguiente información de contexto (referencias a documentos) para responder. "
             "Si no puedes responder con certeza, indícalo. "
             "Responde siempre en español profesional.\n\n"
+            "No pases de los 12000 tokens en la respuesta."
             f"CONTEXTO DISPONIBLE:\n{context_str}"
         )
 

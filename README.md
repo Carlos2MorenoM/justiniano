@@ -13,6 +13,7 @@ The project implements a microservices architecture with a Freemium model (Free/
 - **Automatic Source Linking:** Client-side extraction of BOE citations using Regex, providing direct links to official documents.
 - **Idempotent BOE Ingestion:** Robust pipeline to consume, parse (XML), and clean Spanish regulations, avoiding duplicates.
 - **Advanced Semantic Search:** Vector engine based on Qdrant and BGE-M3 embeddings, with intelligent semantic chunking by articles and provisions.
+- **AI SDK Generator:** Built-in tool to generate production-ready Python/Node.js clients using Llama 3 via Groq, based on the live OpenAPI spec.
 - **Local & Hybrid Inference:** Native integration with Ollama to run models like Llama 3.1 and Gemma 2/Mistral locally (CPU/GPU).
 - **Tiered Architecture:**
   - **Free Tier:** Fast responses using lightweight models (e.g., Llama 3.1 8B).
@@ -33,6 +34,7 @@ The project implements a microservices architecture with a Freemium model (Free/
 - **Framework:** NestJS (Node.js/TypeScript).
 - **Responsibility:** Authentication, history management (Mongo), rate limiting, orchestration to ML.
 - **Database:** MongoDB (Chat persistence).
+- **AI SDK Gen:** Groq API (Llama 3) for on-the-fly client generation.
 
 ### Backend - ML (Machine Learning Service)
 - **Framework:** FastAPI (Python).
@@ -55,9 +57,11 @@ graph TD
     Client[Frontend React] -->|HTTP/Stream| BFF[NestJS BFF]
     BFF -->|Persistence| Mongo[(MongoDB)]
     BFF -->|"/chat (Tier Info)"| ML[FastAPI ML Service]
+    BFF -->|SDK Gen - Llama 3| Groq[Groq Cloud API]
     
     subgraph "Client Layer"
         Client -->|Visualizes| Metrics[Observability Panel]
+        Client -->|Dev Tools| SDK[SDK Generator UI]
         Metrics -->|Extracts| Sources[BOE Links]
     end
 
@@ -87,7 +91,7 @@ Copy the example file and configure your credentials (especially for MongoDB and
 ```bash
 cp .env.example .env
 ```
-Ensure you define `ML_ADMIN_API_KEY` and the `MONGO` credentials.
+Ensure you define `ML_ADMIN_API_KEY`, the `MONGO` credentials, and `GROQ_API_KEY`/`GROQ_MODEL` for the SDK generator.
 
 ### 2. Launch Backend Infrastructure
 The project uses Docker Compose to orchestrate the backend services and databases:
@@ -108,6 +112,16 @@ npm install
 npm run dev
 ```
 Access the UI at: http://localhost:5173
+
+### 4. API Documentation & SDK Generation
+Once the backend is running, you can access the interactive API documentation (Swagger UI) at:
+- http://localhost:3000/api
+
+To generate a client SDK for your preferred language (Python or Node.js):
+1. Navigate to the "Developers" section in the Frontend (http://localhost:5173/developers).
+2. Select your language.
+3. Click "Generate Client SDK".
+The system will use the live OpenAPI spec and Llama 3 to build a custom client library for you.
 
 ---
 
@@ -140,7 +154,8 @@ The project follows a modular evolutionary strategy.
 .
 ├── backend-bff/          # NestJS: API Gateway and Business Logic
 │   ├── src/chat/         # Chat Module and communication with ML
-│   └── src/conversations/# Persistence module in MongoDB
+│   ├── src/conversations/# Persistence module in MongoDB
+│   └── src/developers/   # AI SDK Generator (Groq integration)
 ├── backend-ml/           # FastAPI: RAG Brain and Ingestion
 │   ├── boe_ingestion/    # ETL for the Official State Gazette
 │   ├── data_processing/  # Chunking and vector loading scripts
