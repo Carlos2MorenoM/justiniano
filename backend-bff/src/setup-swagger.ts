@@ -8,15 +8,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
  * @param app - The NestJS application instance
  */
 export function setupSwagger(app: INestApplication): void {
-    const config = new DocumentBuilder()
-        .setTitle('Justiniano BFF API')
-        .setDescription(
-            'API Gateway and orchestrator for the Justiniano RAG system. Single Source of Truth for the AI SDK Generator.',
-        )
-        .setVersion('1.0')
-        .addTag('justiniano')
-        .build();
+  const config = new DocumentBuilder()
+    .setTitle('Justiniano BFF API')
+    .setDescription(
+      'API Gateway and orchestrator for the Justiniano RAG system. Single Source of Truth for the AI SDK Generator.',
+    )
+    .setVersion('1.0')
+    .addTag('justiniano')
+    .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 }

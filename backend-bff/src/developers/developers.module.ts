@@ -4,8 +4,8 @@ import { DevelopersController } from './developers.controller';
 import { DevelopersService } from './developers.service';
 
 @Module({
-    imports: [HttpModule],
-    controllers: [DevelopersController],
-    providers: [DevelopersService],
+  imports: [HttpModule],
+  controllers: [DevelopersController],
+  providers: [DevelopersService],
 })
-export class DevelopersModule { }
+export class DevelopersModule {}

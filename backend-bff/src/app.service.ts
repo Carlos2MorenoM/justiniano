@@ -25,9 +25,8 @@ export class AppService {
 
       return {
         bff_status: 'ok',
-        ml_response: response.data,
+        ml_response: response.data as unknown,
       };
-
     } catch (error: unknown) {
       return {
         bff_status: 'error',

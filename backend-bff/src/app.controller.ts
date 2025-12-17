@@ -5,8 +5,7 @@ import { AppService } from './app.service';
 export class AppController {
   private mlServiceUrl: string;
 
-  constructor(
-    private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get('ml-status')
   async getMlStatus() {

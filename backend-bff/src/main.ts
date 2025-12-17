@@ -4,7 +4,7 @@ import { setupSwagger } from './setup-swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug']
+    logger: ['error', 'warn', 'log', 'debug'],
   });
 
   // Enable CORS for development flexibility

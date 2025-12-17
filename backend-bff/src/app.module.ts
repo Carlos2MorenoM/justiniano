@@ -5,13 +5,16 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConversationsModule } from './conversations/conversations.module';
-import { ChatModule } from './chat/chat.module'
+import { ChatModule } from './chat/chat.module';
 import { DevelopersModule } from './developers/developers.module';
 
 @Module({
   imports: [
     // Load environment variables globally
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['../.env', '.env'],
+    }),
 
     // Async MongoDB connection configuration
     MongooseModule.forRootAsync({
@@ -31,5 +34,4 @@ import { DevelopersModule } from './developers/developers.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
-
+export class AppModule {}

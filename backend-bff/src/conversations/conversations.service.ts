@@ -8,8 +8,9 @@ export class ConversationsService {
   private readonly logger = new Logger(ConversationsService.name);
 
   constructor(
-    @InjectModel(Conversation.name) private conversationModel: Model<Conversation>,
-  ) { }
+    @InjectModel(Conversation.name)
+    private conversationModel: Model<Conversation>,
+  ) {}
 
   // Find existing conversation or create a new one for the user
   async findOrCreate(userId: string): Promise<Conversation> {
@@ -26,7 +27,7 @@ export class ConversationsService {
     userId: string,
     role: 'user' | 'assistant',
     content: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ) {
     try {
       let conversation = await this.conversationModel.findOne({ userId });
@@ -43,9 +44,10 @@ export class ConversationsService {
       });
 
       const savedDoc = await conversation.save();
-      this.logger.log(`Message saved for user ${userId}. Total messages: ${savedDoc.messages.length}`);
+      this.logger.log(
+        `Message saved for user ${userId}. Total messages: ${savedDoc.messages.length}`,
+      );
       return savedDoc;
-
     } catch (error) {
       this.logger.error(`Failed to save message for user ${userId}`, error);
       throw error;

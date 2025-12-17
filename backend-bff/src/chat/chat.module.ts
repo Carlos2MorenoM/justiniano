@@ -6,9 +6,9 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    HttpModule,           // To call Backend ML
-    ConversationsModule,  // To save history
-    ConfigModule,         // To read env vars
+    HttpModule, // To call Backend ML
+    ConversationsModule, // To save history
+    ConfigModule, // To read env vars
   ],
   controllers: [ChatController],
 })
