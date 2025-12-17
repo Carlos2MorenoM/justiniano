@@ -48,12 +48,12 @@ export class ChatController {
         this.httpService.get(`${this.mlServiceUrl}/chat/evaluation/${messageId}`)
       );
       return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
       // If ML service returns 404, it usually means the background task hasn't finished yet.
-      if (error.response?.status === 404) {
+      if ((error as any).response?.status === 404) {
         throw new NotFoundException('Evaluation pending or not found');
       }
-      this.logger.error(`Error fetching evaluation proxy: ${error.message}`);
+      this.logger.error(`Error fetching evaluation proxy: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -76,7 +76,7 @@ export class ChatController {
     // Generate or extract a consistent ID for this interaction.
     // This ID links the User Prompt, ML Response, and Ragas Evaluation.
     // We allow the frontend to supply it to facilitate client-side state management.
-    const messageId = body['messageId'] || crypto.randomUUID();
+    const messageId = (body as any)['messageId'] || crypto.randomUUID();
 
     this.logger.log(`Processing chat interaction [${messageId}] for user ${userId} (Tier: ${userTier})`);
 
@@ -135,13 +135,13 @@ export class ChatController {
         res.end();
       });
 
-      stream.on('error', (err) => {
+      stream.on('error', (err: Error) => {
         this.logger.error('Stream transmission error:', err);
         res.end();
       });
 
-    } catch (error) {
-      this.logger.error('Failed to establish connection with ML Backend', error.message);
+    } catch (error: unknown) {
+      this.logger.error('Failed to establish connection with ML Backend', (error as Error).message);
       res.status(500).json({ error: 'AI Agent unavailable' });
     }
   }

@@ -34,7 +34,7 @@ export const SdkGenerator = () => {
 
             const data = await response.json();
             setCode(data.code);
-        } catch (err) {
+        } catch {
             setError('Error generating SDK. Ensure Backend is running.');
         } finally {
             setLoading(false);

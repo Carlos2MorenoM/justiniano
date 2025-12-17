@@ -25,7 +25,7 @@ export interface Message {
         model?: string;
         tier?: string;
         metrics?: EvaluationMetrics;
-        [key: string]: any;
+        [key: string]: unknown;
     };
 }
 
