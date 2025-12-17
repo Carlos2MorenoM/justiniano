@@ -6,7 +6,6 @@ import { of, throwError } from 'rxjs';
 
 describe('AppService', () => {
   let appService: AppService;
-  let httpService: HttpService;
 
   const mockHttpService = {
     get: jest.fn(),
@@ -32,7 +31,6 @@ describe('AppService', () => {
     }).compile();
 
     appService = module.get<AppService>(AppService);
-    httpService = module.get<HttpService>(HttpService);
   });
 
   afterEach(() => {

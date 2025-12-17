@@ -16,7 +16,7 @@ import { DevelopersModule } from './developers/developers.module';
     // Async MongoDB connection configuration
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         // If MONGO_URI is missing, the app will crash at startup with a clear error.
         uri: configService.getOrThrow<string>('MONGO_URI'),
       }),

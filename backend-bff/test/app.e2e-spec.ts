@@ -29,7 +29,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ml-status (GET)', () => {
-    return request(app.getHttpServer())
+    return request(app.getHttpServer() as any)
       .get('/ml-status')
       .expect(200)
       .expect(expectedMlStatusResponse);

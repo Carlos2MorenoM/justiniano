@@ -16,7 +16,7 @@ interface ObservabilityPanelProps {
     currentTier: UserTier;
     onTierChange: (tier: UserTier) => void;
     metrics: { latencyMs?: number };
-    lastMessageMeta?: Record<string, any>;
+    lastMessageMeta?: Record<string, unknown>;
     /** The actual text content of the last assistant message, used to extract sources */
     lastMessageContent?: string;
 }
@@ -128,8 +128,8 @@ export const ObservabilityPanel: React.FC<ObservabilityPanelProps> = ({
                             </div>
                             <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                                 <span className="text-xs text-gray-500 block mb-1">Modelo</span>
-                                <span className="text-sm font-mono font-semibold text-corpus-structure truncate" title={lastMessageMeta?.model}>
-                                    {lastMessageMeta?.model || "N/A"}
+                                <span className="text-sm font-mono font-semibold text-corpus-structure truncate" title={lastMessageMeta?.model as string}>
+                                    {(lastMessageMeta?.model as string) || "N/A"}
                                 </span>
                             </div>
                         </div>
