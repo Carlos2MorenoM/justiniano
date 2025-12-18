@@ -1,16 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { setupSwagger } from './setup-swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug'],
+  });
 
-  // CORS Permisivo para desarrollo
+  // Enable CORS for development flexibility
   app.enableCors({
-    origin: true, // <--- Esto permite cualquier origen que pida acceso
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
+  // Initialize Swagger documentation
+  setupSwagger(app);
+
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();

@@ -15,6 +15,9 @@ describe('ChatInterface', () => {
             isLoading: false,
             isStreaming: false,
             error: null,
+            currentTier: 'free',
+            setTier: vi.fn(),
+            lastMetrics: {},
         });
 
         render(<ChatInterface />);
@@ -32,6 +35,9 @@ describe('ChatInterface', () => {
             isLoading: false,
             isStreaming: false,
             error: null,
+            currentTier: 'free',
+            setTier: vi.fn(),
+            lastMetrics: {},
         });
 
         render(<ChatInterface />);

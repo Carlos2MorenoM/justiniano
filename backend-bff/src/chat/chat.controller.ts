@@ -7,7 +7,7 @@ import {
   Logger,
   Get,
   Param,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { HttpService } from '@nestjs/axios';
@@ -15,6 +15,15 @@ import { ConfigService } from '@nestjs/config';
 import { ConversationsService } from '../conversations/conversations.service';
 import { ChatRequestDto } from './dto/chat-request.dto';
 import { firstValueFrom } from 'rxjs';
+import { Readable } from 'stream';
+
+interface AxiosErrorLike {
+  response?: {
+    status: number;
+    data?: unknown;
+  };
+  message: string;
+}
 
 /**
  * Controller responsible for handling Chat interactions and Evaluation retrieval.
@@ -45,15 +54,20 @@ export class ChatController {
     this.logger.debug(`Polling evaluation metrics for message: ${messageId}`);
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.mlServiceUrl}/chat/evaluation/${messageId}`)
+        this.httpService.get<unknown>(
+          `${this.mlServiceUrl}/chat/evaluation/${messageId}`,
+        ),
       );
       return response.data;
-    } catch (error) {
+    } catch (error: unknown) {
+      const axiosError = error as AxiosErrorLike;
       // If ML service returns 404, it usually means the background task hasn't finished yet.
-      if (error.response?.status === 404) {
+      if (axiosError.response?.status === 404) {
         throw new NotFoundException('Evaluation pending or not found');
       }
-      this.logger.error(`Error fetching evaluation proxy: ${error.message}`);
+      this.logger.error(
+        `Error fetching evaluation proxy: ${axiosError.message}`,
+      );
       throw error;
     }
   }
@@ -76,19 +90,25 @@ export class ChatController {
     // Generate or extract a consistent ID for this interaction.
     // This ID links the User Prompt, ML Response, and Ragas Evaluation.
     // We allow the frontend to supply it to facilitate client-side state management.
-    const messageId = body['messageId'] || crypto.randomUUID();
+    const messageId = body.messageId || crypto.randomUUID();
 
-    this.logger.log(`Processing chat interaction [${messageId}] for user ${userId} (Tier: ${userTier})`);
+    this.logger.log(
+      `Processing chat interaction [${messageId}] for user ${userId} (Tier: ${userTier})`,
+    );
 
     // 1. Persist User Intent
-    await this.conversationsService.addMessage(userId, 'user', body.message, { messageId });
+    await this.conversationsService.addMessage(userId, 'user', body.message, {
+      messageId,
+    });
 
     // 2. Prepare Context (Retrieve history)
     const conversation = await this.conversationsService.findOrCreate(userId);
-    const historyPayload = conversation.messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    })).slice(0, -1); // Exclude the current message we just added
+    const historyPayload = conversation.messages
+      .map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }))
+      .slice(0, -1); // Exclude the current message we just added
 
     try {
       // 3. Forward to ML Backend
@@ -98,7 +118,7 @@ export class ChatController {
         data: {
           query: body.message,
           history: historyPayload,
-          message_id: messageId // Crucial: Send ID to ML for tracking evaluation
+          message_id: messageId, // Crucial: Send ID to ML for tracking evaluation
         },
         headers: {
           'X-User-Tier': userTier,
@@ -107,7 +127,7 @@ export class ChatController {
         responseType: 'stream',
       });
 
-      const stream = response.data;
+      const stream = response.data as Readable;
       let fullResponseText = '';
 
       // Set headers for Server-Sent Events (SSE)
@@ -123,25 +143,36 @@ export class ChatController {
         res.write(textChunk); // Pipe chunk to client
       });
 
-      stream.on('end', async () => {
-        this.logger.log(`Stream finished for [${messageId}]. Persisting response.`);
+      stream.on('end', () => {
+        void (async () => {
+          this.logger.log(
+            `Stream finished for [${messageId}]. Persisting response.`,
+          );
 
-        // 5. Persist Assistant Response
-        await this.conversationsService.addMessage(userId, 'assistant', fullResponseText, {
-          model: userTier === 'pro' ? 'Gemma 2' : 'Llama 3.1',
-          tier: userTier,
-          evaluationId: messageId // Link to future evaluation metrics
-        });
-        res.end();
+          // 5. Persist Assistant Response
+          await this.conversationsService.addMessage(
+            userId,
+            'assistant',
+            fullResponseText,
+            {
+              model: userTier === 'pro' ? 'Gemma 2' : 'Llama 3.1',
+              tier: userTier,
+              evaluationId: messageId, // Link to future evaluation metrics
+            },
+          );
+          res.end();
+        })();
       });
 
-      stream.on('error', (err) => {
+      stream.on('error', (err: Error) => {
         this.logger.error('Stream transmission error:', err);
         res.end();
       });
-
-    } catch (error) {
-      this.logger.error('Failed to establish connection with ML Backend', error.message);
+    } catch (error: unknown) {
+      this.logger.error(
+        'Failed to establish connection with ML Backend',
+        (error as Error).message,
+      );
       res.status(500).json({ error: 'AI Agent unavailable' });
     }
   }

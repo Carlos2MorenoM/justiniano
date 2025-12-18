@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request = require('supertest');
+import request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { AppService } from './../src/app.service';
 
@@ -29,6 +29,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ml-status (GET)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return request(app.getHttpServer())
       .get('/ml-status')
       .expect(200)

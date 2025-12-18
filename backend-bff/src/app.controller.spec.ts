@@ -3,10 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 const mockAppService = {
-  getMlStatus: jest.fn(async () => ({
-    bff_status: 'ok',
-    ml_response: { status: 'ok', service: 'backend-ml' },
-  })),
+  getMlStatus: jest.fn(() =>
+    Promise.resolve({
+      bff_status: 'ok',
+      ml_response: { status: 'ok', service: 'backend-ml' },
+    }),
+  ),
 };
 
 describe('AppController', () => {

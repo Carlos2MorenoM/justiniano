@@ -22,17 +22,16 @@ export class AppService {
       const response = await lastValueFrom(
         this.httpService.get(`${this.mlServiceUrl}/status`),
       );
-      
+
       return {
         bff_status: 'ok',
-        ml_response: response.data,
+        ml_response: response.data as unknown,
       };
-
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         bff_status: 'error',
         message: 'Cannot connect ML service',
-        error: error.message,
+        error: (error as Error).message,
       };
     }
   }
