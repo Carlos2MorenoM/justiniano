@@ -16,7 +16,7 @@ from main import app
 
 # --- Helper for mocking async generators ---
 
-async def mock_chat_generator(query: str, user_tier: str):
+async def mock_chat_generator(query: str, history: list, user_tier: str):
     """
     A fake async generator to simulate the streaming response from the LLM.
     It yields tokens one by one to mimic the behavior of Ollama.
@@ -65,7 +65,7 @@ def test_chat_endpoint_success(client, mocker):
     assert response.text == "Hello, I am Justiniano."
     
     # Verify that the service was called with the correct arguments
-    mock_service.assert_called_once_with("Hello", "free")
+    mock_service.assert_called_once_with("Hello", [], "free")
 
 def test_chat_endpoint_validation_error(client):
     """
@@ -95,4 +95,4 @@ def test_chat_endpoint_tier_header(client, mocker):
     )
 
     # Verify that the service received 'pro' as the second argument
-    mock_service.assert_called_once_with("Test tier", "pro")
+    mock_service.assert_called_once_with("Test tier", [], "pro")

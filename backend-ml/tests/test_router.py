@@ -15,7 +15,7 @@ def client(monkeypatch, mocker):
     3.  *Only then* importing the app and creating the TestClient.
     """
     
-    # 1. Set env var FIRST.
+    # 1. Set env var (for fresh imports)
     monkeypatch.setenv("ML_ADMIN_API_KEY", TEST_API_KEY)
     
     # 2. Mock the background task.
@@ -25,9 +25,12 @@ def client(monkeypatch, mocker):
         autospec=True
     )
     
-    # 3. NOW we import the app and create the client.
-    # The app will load *after* the monkeypatch is active.
+    # 3. Import app and Apply Magic Patch to existing module variable
+    # Because main might be imported by other tests, prevents stale env var read
     from main import app
+    from boe_ingestion import router as boe_router
+    monkeypatch.setattr(boe_router, "ML_ADMIN_API_KEY", TEST_API_KEY)
+    
     from fastapi.testclient import TestClient
 
     with TestClient(app) as test_client:
