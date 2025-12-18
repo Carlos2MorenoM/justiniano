@@ -149,7 +149,9 @@ class RagService:
             "No pases de los 12000 tokens en la respuesta."
             f"CONTEXTO DISPONIBLE:\n{context_str}"
         )
-
+        selected_model = "llama-3.3-70b-versatile" if user_tier == 'pro' else "llama-3.1-8b-instant"
+        
+        log.info(f"Using model: {selected_model} for tier: {user_tier}")
         # 3. Build Messages Payload for Groq
         messages_payload = [{'role': 'system', 'content': system_prompt}]
         
@@ -163,9 +165,9 @@ class RagService:
         # 4. Call Groq API (Streaming)
         try:
             stream = self.groq_client.chat.completions.create(
-                model=self.model_name,
+                model=selected_model,
                 messages=messages_payload,
-                temperature=0.3, # Low temp for factual responses
+                temperature=0.3, 
                 max_tokens=1024,
                 stream=True,
                 stop=None

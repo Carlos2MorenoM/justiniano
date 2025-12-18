@@ -75,7 +75,7 @@ export function useChat() {
                 content: '',
                 timestamp: new Date(),
                 metadata: {
-                    model: currentTier === 'pro' ? 'Gemma 2 (12B)' : 'Llama 3.1 (8B)',
+                    model: currentTier === 'pro' ? 'Llama 3.3 (70B)' : 'Llama 3.1 (8B)',
                     tier: currentTier
                 }
             };
