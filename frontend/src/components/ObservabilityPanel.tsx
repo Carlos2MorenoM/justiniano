@@ -33,7 +33,13 @@ export const ObservabilityPanel: React.FC<ObservabilityPanelProps> = ({
     lastMessageMeta,
     lastMessageContent = ""
 }) => {
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(() => {
+        // Responsive Default: Open on Desktop (>= 768px), Closed on Mobile
+        if (typeof window !== 'undefined') {
+            return window.innerWidth >= 768;
+        }
+        return true;
+    });
 
     // --- Source Extraction Logic ---
     // Scans the message text for patterns like "BOE-A-2023-12345"
