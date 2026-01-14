@@ -32,7 +32,7 @@ export class DevelopersService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   /**
    * Generates a client SDK for the specified language using Groq (LLM).
@@ -44,12 +44,23 @@ export class DevelopersService {
   async generateSdk(dto: GenerateSdkDto): Promise<{ code: string }> {
     const openApiSpec = await this.fetchLocalOpenApiSpec();
 
+    const libRecommendations: Record<string, string> = {
+      python: "'httpx' and 'pydantic'",
+      node: "'axios' and 'typescript'",
+      go: "'net/http' and standard structs",
+      java: "'OkHttp' and 'Jackson' (or 'Retrofit')",
+      php: "'Guzzle' and modern PHP 8+ features",
+    };
+
+    // Default to generic advice if language not in map
+    const bestPractices = libRecommendations[dto.language] || 'modern best practices';
+
     const prompt = `
       You are an expert Developer Experience Engineer.
       Your task is to generate a production-ready, typed API Client SDK in ${dto.language} for the following OpenAPI specification.
 
       Requirements:
-      1. Use modern best practices (e.g., 'httpx'/'pydantic' for Python, 'axios'/'typescript' for Node).
+      1. Use modern best practices (e.g., ${bestPractices}).
       2. Include a helper class with methods matching the API endpoints.
       3. Add comprehensive docstrings/JSDoc.
       4. Include a brief usage example at the bottom in comments.

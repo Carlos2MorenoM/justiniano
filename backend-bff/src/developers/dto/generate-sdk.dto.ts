@@ -9,6 +9,6 @@ export class GenerateSdkDto {
   })
   @IsString()
   @IsNotEmpty()
-  @IsIn(['python', 'node'])
-  language: 'python' | 'node';
+  @IsIn(['python', 'node', 'go', 'java', 'php'])
+  language: 'python' | 'node' | 'go' | 'java' | 'php';
 }
