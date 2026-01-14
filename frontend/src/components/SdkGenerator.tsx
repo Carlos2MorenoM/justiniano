@@ -6,13 +6,15 @@ import { useState } from 'react';
 // Localhost is used as a fallback for development.
 const BASE_URL = "https://backend-bff-production.up.railway.app"
 
-// 2. Construct the full endpoint URL, ensuring no double slashes.
+// 2. Construct endpoints
 const GENERATE_SDK_URL = `${BASE_URL.replace(/\/$/, '')}/developers/generate-sdk`;
+const GENERATE_CONTRACT_URL = `${BASE_URL.replace(/\/$/, '')}/developers/generate-contract`;
 
 type Language = 'python' | 'node' | 'go' | 'java' | 'php';
 
 
 export const SdkGenerator = () => {
+    const [mode, setMode] = useState<'sdk' | 'contract'>('sdk');
     const [language, setLanguage] = useState<Language>('python');
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
@@ -24,19 +26,21 @@ export const SdkGenerator = () => {
         setCode('');
 
         try {
+            const endpoint = mode === 'sdk' ? GENERATE_SDK_URL : GENERATE_CONTRACT_URL;
+
             // Assuming Vite proxy or CORS allows this call to localhost:3000
-            const response = await fetch(GENERATE_SDK_URL, {
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ language }),
             });
 
-            if (!response.ok) throw new Error('Failed to generate SDK');
+            if (!response.ok) throw new Error(`Failed to generate ${mode === 'sdk' ? 'SDK' : 'Contract'}`);
 
             const data = await response.json();
             setCode(data.code);
         } catch {
-            setError('Error generating SDK. Ensure Backend is running.');
+            setError('Error generating content. Ensure Backend is running.');
         } finally {
             setLoading(false);
         }
@@ -44,28 +48,61 @@ export const SdkGenerator = () => {
 
     return (
         <div className="flex flex-col h-full bg-gray-50 p-4 md:p-6 overflow-y-auto">
-            <header className="mb-6 flex-shrink-0 flex justify-between items-start">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">AI SDK Generator</h1>
-                    <p className="text-gray-600 text-sm md:text-base">
-                        Build "Enterprise-Ready" client libraries for Justiniano API in seconds.
-                    </p>
+            <header className="mb-6 flex-shrink-0">
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Justiniano Developer Portal</h1>
+                        <p className="text-gray-600 text-sm md:text-base">
+                            Automating Developer Experience with Generative AI.
+                        </p>
+                    </div>
+                    <a
+                        href="https://backend-bff-production.up.railway.app/api"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-3 py-2 rounded-lg transition-colors"
+                    >
+                        <span>Test API (Swagger UI)</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
                 </div>
-                <a
-                    href="https://backend-bff-production.up.railway.app/api"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-3 py-2 rounded-lg transition-colors"
-                >
-                    <span>Test API (Swagger UI)</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                </a>
+
+                {/* Tabs */}
+                <div className="flex border-b border-gray-200">
+                    <button
+                        onClick={() => setMode('sdk')}
+                        className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${mode === 'sdk'
+                                ? 'border-indigo-600 text-indigo-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                    >
+                        Client SDK Generator
+                    </button>
+                    <button
+                        onClick={() => setMode('contract')}
+                        className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${mode === 'contract'
+                                ? 'border-indigo-600 text-indigo-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                    >
+                        Contract Test Generator
+                    </button>
+                </div>
             </header>
 
             <div className="flex flex-col lg:flex-row flex-1 gap-6">
                 {/* Controls Panel */}
                 <div className="w-full lg:w-1/3 bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col gap-6 flex-shrink-0">
                     <div>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-1">
+                            {mode === 'sdk' ? 'Generate API Client' : 'Generate Contract Test'}
+                        </h2>
+                        <p className="text-sm text-gray-500 mb-4">
+                            {mode === 'sdk'
+                                ? 'Create a production-ready library for consuming the API.'
+                                : 'Create a consumer-driven contract test (Pact V3) for validation.'}
+                        </p>
+
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Target Language
                         </label>
@@ -100,7 +137,7 @@ export const SdkGenerator = () => {
                                     Generating...
                                 </span>
                             ) : (
-                                'Generate Client SDK'
+                                mode === 'sdk' ? 'Generate Client SDK' : 'Generate Pact Test'
                             )}
                         </button>
                         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -111,7 +148,7 @@ export const SdkGenerator = () => {
                 <div className="w-full lg:flex-1 bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col min-h-[400px]">
                     <div className="bg-gray-800 px-4 py-2 flex justify-between items-center border-b border-gray-700">
                         <span className="text-xs text-gray-400 font-mono">
-                            generated_client.{
+                            {mode === 'sdk' ? 'generated_client' : 'contract_test'}.{
                                 language === 'python' ? 'py' :
                                     language === 'node' ? 'ts' :
                                         language === 'go' ? 'go' :
