@@ -137,4 +137,26 @@ export class DevelopersService {
       );
     }
   }
+
+  async generateContractTest(dto: GenerateSdkDto): Promise<{ code: string }> {
+    const openApiSpec = await this.fetchLocalOpenApiSpec();
+
+    const prompt = `
+      You are an expert in Contract Testing and Pact.io.
+      Your task is to generate a comprehensive Consumer-Driven Contract Test (Pact V3) in ${dto.language} for the consumer 'JustinianoBFF' and provider 'JustinianoML'.
+      Use the provided OpenAPI specification to infer valid interactions (requests/responses) and matching rules.
+
+      Requirements:
+      1. Use Pact V3 specification.
+      2. For ${dto.language}, use the official Pact library (e.g. '@pact-foundation/pact' for Node, 'pact-python' for Python).
+      3. Include at least one test case for a main endpoint found in the spec.
+      4. Use regex matchers (MatchersV3.regex) for dynamic fields like IDs and dates.
+      5. Return ONLY the code, no markdown.
+
+      OpenAPI Spec:
+      ${JSON.stringify(openApiSpec)}
+    `;
+
+    return this.callLlm(prompt);
+  }
 }
