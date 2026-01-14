@@ -9,7 +9,7 @@ const BASE_URL = "https://backend-bff-production.up.railway.app"
 // 2. Construct the full endpoint URL, ensuring no double slashes.
 const GENERATE_SDK_URL = `${BASE_URL.replace(/\/$/, '')}/developers/generate-sdk`;
 
-type Language = 'python' | 'node';
+type Language = 'python' | 'node' | 'go' | 'java' | 'php';
 
 
 export const SdkGenerator = () => {
@@ -44,11 +44,22 @@ export const SdkGenerator = () => {
 
     return (
         <div className="flex flex-col h-full bg-gray-50 p-4 md:p-6 overflow-y-auto">
-            <header className="mb-6 flex-shrink-0">
-                <h1 className="text-2xl font-bold text-gray-800">AI SDK Generator</h1>
-                <p className="text-gray-600 text-sm md:text-base">
-                    Build "Enterprise-Ready" client libraries for Justiniano API in seconds.
-                </p>
+            <header className="mb-6 flex-shrink-0 flex justify-between items-start">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800">AI SDK Generator</h1>
+                    <p className="text-gray-600 text-sm md:text-base">
+                        Build "Enterprise-Ready" client libraries for Justiniano API in seconds.
+                    </p>
+                </div>
+                <a
+                    href="https://backend-bff-production.up.railway.app/api"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-3 py-2 rounded-lg transition-colors"
+                >
+                    <span>Test API (Swagger UI)</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                </a>
             </header>
 
             <div className="flex flex-col lg:flex-row flex-1 gap-6">
@@ -58,25 +69,19 @@ export const SdkGenerator = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Target Language
                         </label>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => setLanguage('python')}
-                                className={`flex-1 py-3 px-4 rounded-md border text-sm font-medium transition-colors ${language === 'python'
-                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    }`}
-                            >
-                                Python (httpx)
-                            </button>
-                            <button
-                                onClick={() => setLanguage('node')}
-                                className={`flex-1 py-3 px-4 rounded-md border text-sm font-medium transition-colors ${language === 'node'
-                                    ? 'bg-green-50 border-green-500 text-green-700'
-                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    }`}
-                            >
-                                Node.js (TS)
-                            </button>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                            {(['python', 'node', 'go', 'java', 'php'] as Language[]).map((lang) => (
+                                <button
+                                    key={lang}
+                                    onClick={() => setLanguage(lang)}
+                                    className={`py-3 px-2 rounded-md border text-sm font-medium transition-colors capitalize ${language === lang
+                                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 ring-1 ring-indigo-500'
+                                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {lang === 'node' ? 'Node.js' : lang}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -106,7 +111,12 @@ export const SdkGenerator = () => {
                 <div className="w-full lg:flex-1 bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col min-h-[400px]">
                     <div className="bg-gray-800 px-4 py-2 flex justify-between items-center border-b border-gray-700">
                         <span className="text-xs text-gray-400 font-mono">
-                            generated_client.{language === 'python' ? 'py' : 'ts'}
+                            generated_client.{
+                                language === 'python' ? 'py' :
+                                    language === 'node' ? 'ts' :
+                                        language === 'go' ? 'go' :
+                                            language === 'java' ? 'java' : 'php'
+                            }
                         </span>
                         {code && (
                             <button
